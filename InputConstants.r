@@ -11,3 +11,5 @@ prism =c('ppt','tmx','tmn'))
 
 Month<-c("Jan","Feb","March","April","May","June",
    "July","Aug","Sep","Oct","Nov","Dec")
+   
+JulianLookup<-data.frame(date=c("1950-01-01T00:00:00Z",'1858-11-17T00:00:00Z'),temp=c("K","C"),row.names=c("Nex","Prism"))   

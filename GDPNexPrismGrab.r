@@ -18,7 +18,7 @@ GDPNexPrismGrab<-function(Bound,GCMTime,HistoricTime,Model,OutputDir){
       ModelRetry = Model #failed models are returned in the same list structure
       dir.create(file.path(OutputDir,"ncdf"))
    
-      
+      browser()
       #loop through the Emissions scenarios
       for (i in 1:length(Model)){
         #loop through the models for an emissions scenario  
