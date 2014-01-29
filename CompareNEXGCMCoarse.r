@@ -4,12 +4,13 @@
      #ftp://gdo-dcp.ucllnl.org/pub/dcp/archive/cmip5/global_mon/regrid/inmcm4/rcp85/mon/r1i1p1/tasmin/
      #in addition to the Prism they also added a 9 year averge of the bilinear interpolation
      #so I will have to start at year 10
-     
+     #I'm switching out the COarse 1degree resolution for something that's been bias corrected which should compare much better
 library(ncdf4)
-library(ncdf) 
+library(raster)
+library(fields) #for image.plot
 
- INMCM85<-nc_open("C:\\GoogleDrive\\Climate\\ClimateData\\Yellowstone\\r1i1p1_inmcm4_tasmin.nc") 
- Coarse<-nc_open("C:\\GoogleDrive\\Climate\\ClimateData\\GCMcoarseCompare\\regridded_1deg_tasmin_Amon_inmcm4_rcp85_r1i1p1_200601-210012.nc")
+ INMCM85<-nc_open("C:\\GoogleDrive\\Climate\\ClimateData\\Yellowstone\\r1i1p1_inmcm4_tasmin.nc") #this is missing the time dimension but it's 1/16/2006 to 12/16/2020
+ Coarse<-nc_open("C:\\GoogleDrive\\Climate\\ClimateData\\GCMcoarseCompare\\BC_1deg_tasmin_Amon_inmcm4_rcp85_r1i1p1_200601-210012.nc")
     # unfortunately ncdf4 doesn't have a utility fct to figure out the dimensionality of the array
     # and so we dig...
 Cdim<-Coarse$var$tasmin$size
@@ -19,10 +20,11 @@ Fdim<-INMCM85$var$inmcm4_tasmin$size
 
 ts109<- ncvar_get(INMCM85, varid="inmcm4_tasmin",start=c(1,1,109), count=c(Fdim[1],Fdim[2],1))
 ts121<- ncvar_get(INMCM85, varid="inmcm4_tasmin",start=c(1,1,121), count=c(Fdim[1],Fdim[2],1))
-image(ts109-ts121)
+
     #==============================================
     # Difference is the result to compare with the bilinear interpolation
 Difference<-ts109-ts121
+
 lon<-ncvar_get(INMCM85, varid="lon",start=1, count=Fdim[1])
 lat<-ncvar_get(INMCM85, varid="lat",start=1, count=Fdim[2])
 Time<-ncvar_get(INMCM85, varid="time",start=1, count=20)
@@ -42,8 +44,11 @@ Avg9yr121<-apply(NineYr[2:10,,],c(2,3),mean)
 
 Cts109<- ncvar_get(Coarse, varid="tasmin",start=c(1,1,109), count=c(Cdim[1],Cdim[2],1))
 Cts121<- ncvar_get(Coarse, varid="tasmin",start=c(1,1,121), count=c(Cdim[1],Cdim[2],1))
+if(Coarse$var$tasmin$units=="C") {
+ Cts109<-Cts109+273.15
+ Cts121<-Cts121+273.15
+}
 CTime<-ncvar_get(Coarse, varid="time",start=1, count=20)
-image(Cts109-Cts121)
  
     #Coarse has the same time but not the same lat lon 
 Clon<-ncvar_get(Coarse, varid="longitude",start=1, count=Cdim[1])
@@ -58,7 +63,8 @@ Cts109<-Cts109[(Clon<=(max(lon)) & Clon>=(min(lon))),(Clat<=max(lat) & Clat>=min
 Cts121<-Cts121[(Clon<=(max(lon)) & Clon>=(min(lon))),(Clat<=max(lat) & Clat>=min(lat))]
 Avg9yr109<-Avg9yr109[(Clon<=(max(lon)) & Clon>=(min(lon))),(Clat<=max(lat) & Clat>=min(lat))]
 Avg9yr121<-Avg9yr121[(Clon<=(max(lon)) & Clon>=(min(lon))),(Clat<=max(lat) & Clat>=min(lat))]     
-     # Convert to rasters so I can do a bilinear interpolation 
+     # Convert to rasters so I can do a bilinear interpolation  
+  z<-raster(t(ts109))
 Cts109<-raster(t(Cts109))
 Cts121<-raster(t(Cts121))
 Avg9yr109<-raster(t(Avg9yr109))
@@ -71,7 +77,8 @@ plot(Cts109-Cts121)
 
 CoarseDif<-t(as.matrix(Cts109))-t(as.matrix(Cts121))
 image(CoarseDif,main="Coarse Dif")
- 
+image(CoarseDif+t(as.matrix(Avg9yr109))-t(as.matrix(Avg9yr121)))
+image(Difference) 
   p<-raster(t(inRegion))
   z<-raster(t(ts1))
   Interpol<-resample(p,z,method="bilinear")

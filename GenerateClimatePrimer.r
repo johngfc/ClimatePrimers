@@ -6,10 +6,10 @@
     #setwd("C:\\Users\\mallen\\Desktop\\Climate\\Rcode")
     sourceList<-list("ChkLibs.r","ClipToPolygon.r","MyPlotSetup.r","GetParkBoundary.r","GetParkBox.r","PlotClimOverMap.r",
        "GDPNexPrismGrab.r","InputConstants.r","YearlyLinePlot.r","AnomalyPlot.r","ReadClimateNetCDF.r",
-       "month.day.year.r","GenerateColors.r")
+       "month.day.year.r","GenerateColors.r","Convert","PlotMappedDataClass","ClassesAndMethods")
     unlist(lapply(sourceList,source))
     
-    ChkLibs(list("maptools","rgdal","raster","OpenStreetMap","mapdata","ncdf","fields","maps","RNCEP","rGDP","ggplot2","zoo","XML","RCurl","RColorBrewer"))
+    ChkLibs(list("maptools","rgdal","raster","mapdata","ncdf","fields","maps","RNCEP","rGDP","ggplot2","zoo","XML","RCurl","RColorBrewer"))
     setwd("C:\\GoogleDrive\\Climate")
    
 #============================================
@@ -20,7 +20,7 @@
     ParkCode = "YELL"
     ParkName = "Yellowstone National Park"
     NpsShapes ="NPS_boundaries\\nps_boundary.shp" #the folder containg the NPS shape file
-    LongitudeOffset =360 #in the last dataset 150 worked I'm not sure why
+  
 # GCM Parameters for coarse resolution climate data only
     GDOPath = "C:\\GoogleDrive\\Climate\\bcsd5\\Extraction_tas.nc"   
     ModelKeyPath = "bcsd5\\Projections5.txt" #associates keys with cmip 5 projections for the GDO datasets
@@ -49,6 +49,8 @@
     #just for working on spatial graphics here are two a high res examples for yellowstone
      INMCM85<-open.ncdf("C:\\GoogleDrive\\Climate\\ClimateData\\Yellowstone\\r1i1p1_inmcm4_tasmin.nc")
      Clim<-open.ncdf("C:\\GoogleDrive\\Climate\\ClimateData\\Yellowstone\\e0c8d36d-1707-4a0f-9e56-231acc78dbd5OUTPUT.d97a2137-85b6-42ee-aad1-bad7c611525a.nc")
+    #this is a hillshade we can put under the maps
+    baselayer<-"C:\\GoogleDrive\\Climate\\ClimateData\\HillShade\\hs_250.tif"
 #===========================================    
 #get a bounding box for the park for now later we can just grab the shape 
 #============================================ 
@@ -98,7 +100,39 @@ AnomalyPlot(PrismTmin,Baseline=c(1910,2010),Ylab="Difference from Baseline")
 #============================================
 # Plotting climate over maps
 #============================================
+TminDat<-MappedData(SourcePath="C:\\GoogleDrive\\Climate\\ClimateData\\Yellowstone\\r1i1p1_inmcm4_tasmin.nc",
+              Time='2008-01-01T00:00:00Z',
+               UnitMap=UnitLookup$Nex,
+               Var="Tmin",
+               PlotUnits="C")
+               
+Precip<-MappedData(SourcePath="C:\\GoogleDrive\\Climate\\ClimateData\\Yellowstone\\r1i1p1_inmcm4_tasmin.nc",
+              Time='2008-01-01T00:00:00Z',
+               UnitMap=UnitLookup$Nex,
+               Var="Precip",
+               PlotUnits="kgm2s1")
+Precip<-MappedData(SourcePath="C:\\GoogleDrive\\Climate\\ClimateData\\Yellowstone\\r1i1p1_inmcm4_tasmin.nc",
+              Time='2008-01-01T00:00:00Z',
+               UnitMap=UnitLookup$Nex,
+               Var="Precip",
+               PlotUnits="kgm2s1")               
 
+PChng<-Precip
+PChng@Var<-"PrecipChng"  
+                             
+par(mfrow=c(3,2))               
+plot(x=TminDat,Bound=Boundary)
+plot(x=Precip,Bound=Boundary)
+plot(x=PChng,Bound=Boundary)
+PChng@Var<-"TempChng" 
+plot(x=PChng,Bound=Boundary)
+PChng@Var<-"PurOrn" 
+plot(x=PChng,Bound=Boundary)
+PChng@Var<-"GrnPnk" 
+plot(x=PChng,Bound=Boundary)
+
+
+ 
     jet.colors=colorRampPalette( c("white", "deeppink4") )
     color <- jet.colors(20)   #for those of the bloody earth perswasion
   
@@ -110,7 +144,14 @@ AnomalyPlot(PrismTmin,Baseline=c(1910,2010),Ylab="Difference from Baseline")
     b<-get.var.ncdf(INMCM85,start=c(1,1,1),count=c(361,217,1))
      begCent<-apply(a,c(1,2),mean)-273
     Main<-"2099 Mean Tmin Celcius Projections for INMCM RCP 85"
-    
+   
+n<-MappedData(SourcePath="C:\\GoogleDrive\\Climate\\ClimateData\\Yellowstone\\r1i1p1_inmcm4_tasmin.nc",
+              Time='2008-01-01T00:00:00Z',
+               UnitMap=UnitLookup$Nex,
+               Var="Temp",
+               PlotUnits="C")
+
+plot(n)                
  PlotClimOverMap(Boundary,b,Lon=get.var.ncdf(INMCM85,varid="lon")-LongitudeOffset,Lat=get.var.ncdf(INMCM85,varid="lat"),Main=Main,Border="black",Clip=FALSE,mapType="PrecipChng")
      Main<-"Change in Tmin Mean Anual Projections"
  PlotClimOverMap(Boundary,b,Lon=get.var.ncdf(INMCM85,varid="lon")-LongitudeOffset,Lat=get.var.ncdf(INMCM85,varid="lat"),Colors=heat.colors(25),Border="black",Clip=TRUE)     

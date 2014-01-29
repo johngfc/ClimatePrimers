@@ -4,10 +4,10 @@ PlotClimOverMap<-function(Bound,Layer,Lon,Lat,Colors,Clip=TRUE,Border="blue",Mai
      ex<-extent(Bound)
      LonRng<-extendrange(c(ex@xmin,ex@xmax))
      LatRng<-extendrange(c(ex@ymin,ex@ymax))
-    
+  
     # storing some standard colors for maps and borders which can be overriddent
-    if(missing(Colors)) Colors<-GenerateColors(Layer,mapType)
-    Breaks<-SetBreaks(Layer,mapType)
+    if(missing(Colors)) Colors<-GenerateColors(mapType)
+    Breaks<-SetBreaks(Layer,mapType,Colors)
     
     #================================================================
     # clipping TempAvg requires knowing it's dimensions then setting up 
@@ -15,17 +15,27 @@ PlotClimOverMap<-function(Bound,Layer,Lon,Lat,Colors,Clip=TRUE,Border="blue",Mai
     #      TempAvg[Long,Lat,time,Proj]
     #================================================================
    browser()   
-    if(Clip){  Layer<- ClipToPolygon(Lon,Lat,t(Layer),Bound)
-     
+    if(Clip){  Layer<- ClipToPolygon(Lon,Lat,t(Layer),Bound,Indicies=TRUE)
+         #when clipping we have to remove extra rows and columns so plots look good
+         f<-function(x){sum(is.na(x))}
+         NAperRow<-apply(Layer,1,f)/dim(Layer)[2]
+         NaperCol<-apply(Layer,2,f)/dim(Layer)[2]
+         
+                 # I have to reset these if we cropped our map
+                 Breaks<-SetBreaks(Layer,mapType,Colors)
       #================================================================
     #Plot a google map underneath the region
     #map<-openmap(Bounds[2,c(2,1)],bounds
     #================================================================
-      
+          a<-as.matrix(Layer@data,nrow=length(Lon),byrow=TRUE)
        if(!missing(baselayer)){
-            map <- openmap(c(LatRng[2],LonRng[1]), c(LatRng[1],LonRng[2]),type="bing")
-            map_longlat<-openproj(map,projection="+proj=longlat")
-            plot(map_longlat,raster=TRUE)
+       
+         baselayer<-raster(baselayer) 
+          background<-intersect(baselayer,Bound)
+           background<-trim(background)
+            background<-as.matrix(background)
+              jet.colors=colorRampPalette( c("gray80", "gray10") )      
+         image.plot(background,col=jet.colors(50))
         } else image(Layer,col=Colors)
         map("state",col="red",add=TRUE,lwd=2)
         image(Layer,col=Colors,add=TRUE)

@@ -86,7 +86,7 @@ EmissionSDPlot<-function(Yearly,ParkName,Present){
      #names(SDandAvg)[2:3]<-c("Avg","SD")
     SDandAvg<-as.data.frame(SDandAvg)
     AllAvgs<-merge(SDandAvg,PastAvg,by=1,all=TRUE)
-    
+    browser()
     Alpha<-.2
 g<- ggplot(AllAvgs,aes(x=Years,ymin=0,ymax=10)) +
     geom_ribbon(aes(ymin=rcp26Avg-rcp26SD, ymax=rcp26Avg+rcp26SD,colour="rcp26"),

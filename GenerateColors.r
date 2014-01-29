@@ -1,4 +1,4 @@
-GenerateColors<-function(layer,mapType){
+GenerateColors<-function(mapType){
     #  These functions have some standard color ramps as suggested by Kaye
     #  it sets the break points so that when appropriate a zero change in the
     #  value maps to the neutral color.  Additionally park and state borders that
@@ -14,15 +14,19 @@ GenerateColors<-function(layer,mapType){
     
     #choose the color ramp
       color<-switch(mapType,
-              AbsTemp    = brewer.pal(40,"YlOrRd"),
-              AbsPrecip  = brewer.pal(40,"GnBu"),
-              GrnPnk     = rev(brewer.pal(40,"PiYG")),
-              PrecipChng = rev(brewer.pal(40,"BrBG")),
-              TempChng   = rev(brewer.pal(40,"RdBu"))
+              Temp    = brewer.pal(brewer.pal.info["YlOrRd",]$maxcolors,"YlOrRd"),
+              Tas     = brewer.pal(brewer.pal.info["YlOrRd",]$maxcolors,"YlOrRd"),
+              Tmin    = brewer.pal(brewer.pal.info["YlOrRd",]$maxcolors,"YlOrRd"),
+              Tmax    = brewer.pal(brewer.pal.info["YlOrRd",]$maxcolors,"YlOrRd"),
+              Precip  = brewer.pal(brewer.pal.info["GnBu",]$maxcolors,"GnBu"),
+              GrnPnk  = rev(brewer.pal(brewer.pal.info["PiYG",]$maxcolors,"PiYG")),
+              PurOrn  = brewer.pal(brewer.pal.info["PuOr",]$maxcolors,"PuOr"),
+              PrecipChng = brewer.pal(brewer.pal.info["BrBG",]$maxcolors,"BrBG"),
+              TempChng   = rev(brewer.pal(brewer.pal.info["RdBu",]$maxcolors,"RdBu"))
             )
      color
 }
-SetBreaks<-function(layer,mapType){    
+SetBreaks<-function(layer,mapType,color){    
     #set middle color if looking at change 
      if(!mapType%in%c("AbsTemp","AbsPrecip")){
       r<-max(abs(range(layer,na.rm=TRUE)))

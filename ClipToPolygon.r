@@ -11,7 +11,19 @@ ClipToPolygon<-function(Lon,Lat,Z,Shape,Indicies=FALSE){
     
     ## Now lets cookie-cut the surface 
     sel=!is.na(overlay(temp, Shape))
-     browser()
+    
     clipped_grid= temp[sel,]
-    clipped_grid
+    if(!Indicies) return(clipped_grid)
+   
+    #its a bit of a pain to get a matrix mask out of the sp object
+    LL<-expand.grid(Lon,Lat)
+    charStr<-paste(LL[,1],LL[,2],sep="")
+    inBound<-paste(clipped_grid@coords[,1],clipped_grid@coords[,2],sep="")
+    b<-match(charStr,inBound)
+    LL<-LL[!is.na(b),]
+    Mask<-matrix(b,nrow=length(Lon),byrow=FALSE)
+    ClippedLayer<-t(Z)
+    ClippedLayer[is.na(Mask)]<-NA
+   
+    return(ClippedLayer)
 }
