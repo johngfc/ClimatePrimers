@@ -43,8 +43,7 @@ ReadGDOClimate<-function(OutputFile,Time,Boundary,WholeYear=TRUE,varid,Longitude
                 if(j==1 & Clip){ 
                 #I can't always clip because not always are there points in the region
                 #figure out the clipping just once because it's quite time consuming
-               
-                a<-ClipToPolygon(as.numeric(dimnames(RastArray)[[1]]),as.numeric(dimnames(RastArray)[[2]]),(RastArray[,,j]),Boundary,Indicies=FALSE)
+                a<-ClipToPolygon(as.numeric(dimnames(RastArray)[[1]]),as.numeric(dimnames(RastArray)[[2]]),(RastArray[,,j]),Boundary)
                 indicies=data.frame()
                        for(k in 1:length(Lat)){
                           for(m in 1:length(Lon)){
@@ -55,35 +54,27 @@ ReadGDOClimate<-function(OutputFile,Time,Boundary,WholeYear=TRUE,varid,Longitude
                           }} }}  
                           
                   } 
-                  if(!Clip) ClippedDat<-apply(RastArray,1,mean) # collapse this to one less dimension to match the next line
-                  else ClippedDat<-apply(RastArray, 3, function(x) x[indicies]) 
-                                   
-            colnames(ClippedDat)<-Time
+                  if(!Clip)ClippedDat<-RastArray
+                  else ClippedDat<-RastArray[indicies[,1],indicies[2],]
+                 
+            
             #here we always have to collapse over the pixels
-            ClippedDat<-apply(ClippedDat,2,mean)
+            ClippedDat<-apply(ClippedDat,3,mean)
+            names(ClippedDat)<-Time
             if(j==1) OutputFrame<-ClippedDat
             else OutputFrame<-cbind(OutputFrame,ClippedDat)
     }
-
+    colnames(OutputFrame)<-Projections
     if(aggrToYear){
     Year <- floor(as.numeric(rownames(OutputFrame)))
      OutputFrame <- aggregate(OutputFrame,FUN=mean,by=list(Year=Year))
      rownames(OutputFrame)<-unique(Year)
     }
-     ModelKey<-(read.table(ModelKeyPath,stringsAsFactors=FALSE))[,1]
     
-     if(varid%in%c("tasmax","tasmin")){
-      #not all models were run for tasmin and tasmax so we need to remove those that weren't
-      RawMetaData<-scan(ModelKeyPath,what="raw",sep="\n")
-      Rm<-grep(varid,RawMetaData)
-      if(length(Rm)>0) ModelKey<-ModelKey[-c(Rm)]
-     }
+    OutputFrame<-OutputFrame[,-c(1)]
+    ModelKey<-(read.table(ModelKeyPath,stringsAsFactors=FALSE))[,1]
+    colnames(OutputFrame)<-ModelKey
     
-   
-    if(ncol(OutputFrame)==length(ModelKey)){ #not the case for tasmin tasmax I need to 
-      #read in and parse the metadata to figure it out
-      colnames(OutputFrame)<-ModelKey
-    }
    return(OutputFrame) 
 }
 

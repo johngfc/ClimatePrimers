@@ -1,10 +1,10 @@
 Start <- 2007
-End <- 2017
+End <- 2008
 setwd("/data/nccsc/Private/TalbertM/MariansProjects/Climate")
-setwd("/data")
+#setwd("/data")
 
 source("ChkLibs.r")
-ChkLibs(list("ncdf4"))
+ChkLibs(list("ncdf4","shapefiles","maptools","raster"))
 
 source("InputConstants.r")
 source("BlodgettOpenDapAccessMarianTries.r")
@@ -14,11 +14,11 @@ source("GetParkBox.r")
     ParkName = "Yellowstone National Park"
     NpsShapes ="NPS_boundaries/nps_boundary.shp" #the folder containg the NPS shape file
     LongitudeOffset =360 #in the last 
-    OutputNcdfPath="/data/nccsc/Private/TalbertM/MariansProjects/Climate/YellowstoneClimateData/Nex.nc" #a linux path as this will only run 
+    OutputNcdfPath="/data/nccsc/Private/TalbertM/MariansProjects/Climate/MesaVerdeClimateData/Nex.nc" #a linux path as this will only run 
  #on linux
 #for testing making the model list smallish 
- ModelList[[1]]<-ModelList[[1]][c(2,3,65,66,47,48)]
- ModelList[[2]]<-ModelList[[2]][c(2,3,65,66,47,48)]    
+ ModelList[[1]]<-ModelList[[1]][c(1,2,3,52,53,54)]
+ ModelList[[2]]<-ModelList[[2]][c(1,2,3,46,47,48)]    
 # URIs I'll eventually need as input for now just the NEX is used
 #OPenDAP_URI<-list(Prism="http://cida.usgs.gov/thredds/dodsC/prism",
 #Daymet="http://cida-eros-mows1.er.usgs.gov:8080/thredds/dodsC/daymet",
@@ -26,7 +26,7 @@ Nex="http://dataserver.nccs.nasa.gov/thredds/dodsC/bypass/NEX-DCP30/bcsd"
 #===============================================================
 #                      end of input here    
 
-BoundBox<- GetParkBox(Bndry=NpsShapes,ParkCode,OutputNcdfPath) 
+BoundBox<- GetParkBox(Bndry=NpsShapes,ParkCode) 
 
 
 model<-"inmcm4_tasmin"
@@ -41,10 +41,15 @@ requestNetCDF<-function(BoundBox,URI,ModelList,Start,End){
   # ModelList  = a list of variables to be accessed and included in the netcdf
    # Start      = Start year formatted as 2000-01-01T00:00:00Z Historic or GCM time[1] only the year will be used
   # End        = End year formatted as 2000-01-01T00:00:00Z Historic or GCM time[2] only the year will be used
-  # 
-  
-  Start <- as.numeric(substr(Start,start=1,stop=5))
-  End <- as.numeric(substr(End,start=1,stop=5))
+  #
+  for(rcp in 1:length(ModelList)){
+     for(m in 1:length(ModelList[rcp])){
+      OPeNDAP_URI<-paste(URI,"/",names(ModelList)[rcp],"/r1i1p1/",ModelList[[rcp]][m],".","ncml",sep="")
+      dods_data <- nc_open(OPeNDAP_URI) 
+      model<-ModelList[[rcp]][m]
+      
+      Start <- as.numeric(substr(Start,start=1,stop=5))
+      End <- as.numeric(substr(End,start=1,stop=5))
       bbox_in<-c(BoundBox@coords[4,1],BoundBox@coords[3,2],BoundBox@coords[1,1],BoundBox@coords[2,2])
       bboxIndex<-request_bbox(dods_data,model,bbox_in)
         attach(bboxIndex); on.exit(detach(bboxIndex))

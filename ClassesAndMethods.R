@@ -1,15 +1,15 @@
  setClass("MappedData",
   representation=list(Layer="array",Lat="vector",Lon="vector",Time="POSIXct",Year="vector",Month="vector",UnitIn="character",PlotUnits="character",Var="character",
-          SourcePath="character",ColorScale="vector",TimeOrigin="character"))
+          SourcePath="character",ColorScale="vector",TimeOrigin="character",Projection="character"))
           
-MappedData = function(SourcePath,Time,UnitMap,PlotUnits,Var,LatRng=NA,LonRng=NA){
-	Map = new("MappedData",SourcePath,Time,UnitMap,PlotUnits,Var,LatRng,LonRng)
+MappedData = function(SourcePath,Time,UnitMap,PlotUnits,Var,LatRng=NA,LonRng=NA,Projection=NA){
+	Map = new("MappedData",SourcePath,Time,UnitMap,PlotUnits,Var,LatRng,LonRng,Projection)
 	return(Map)
 }
 
 setMethod(f="initialize",signature="MappedData",
-	definition=function(.Object,SourcePath,Time,UnitMap,PlotUnits,Var,LatRng,LonRng){
-	
+	definition=function(.Object,SourcePath,Time,UnitMap,PlotUnits,Var,LatRng,LonRng,Projection){
+	 
 		.Object@SourcePath = SourcePath
 	     temp<-open.ncdf(.Object@SourcePath)
 		.Object@TimeOrigin = UnitMap$TimeOrigin
@@ -23,13 +23,13 @@ setMethod(f="initialize",signature="MappedData",
     #    Setting up temporal aspects
     #=======================================   
        #Getting the time dimension and converting from Julian to POSIXct
-     
+      
        ncdfTime = get.var.ncdf(temp,varid=UnitMap$timeName)
 	     ncdfTime = as.POSIXct(ncdfTime*86400, origin = UnitMap$TimeOrigin) #as.POSIXct expects seconds not days
 	     Time     = as.POSIXct(Time)
 	    
        StartIndx = which(format(ncdfTime,"%Y-%m")==format(Time[1],"%Y-%m"),arr.ind=TRUE)
-	   
+	    
      #Time can have a start and a stop or just one specify time to pull
      if(length(Time)==2){ 
          Count = which(format(ncdfTime,"%Y-%m")==format(Time[2],"%Y-%m"),arr.ind=TRUE)-StartIndx+1
@@ -59,12 +59,51 @@ setMethod(f="initialize",signature="MappedData",
           .Object@Lon<-.Object@Lon[LonIndx]
           LonIndx<-range(LonIndx)
       } else LonIndx<-c(1,length(.Object@Lon)) 
+     #=====================================
+     #   Determine projection index
+     #======================================
+     
+     if(!is.na(Projection)){
+         ProjKey <- att.get.ncdf(temp,varid="projection",attname="ProjKey")$value
+         ProjKey = unlist(strsplit(ProjKey,split=","))
+         ProjIndx = match(Projection,ProjKey)
+         if(is.na(ProjIndx)) stop(paste("Projection",Projection,
+          "not found valid projections are\n",paste(ProjKey,collapse="\n"),
+          sep=" "))
+        .Object@Projection=Projection  
+     } else{ ProjIndx=1
+      .Object@Projection="not given"
+     }
      #=======================================
      #     Retrieve spatial data
      #=======================================
-     
-      .Object@Layer = get.var.ncdf(temp,start=c(LonIndx[1],LatIndx[1],StartIndx),count=c((LonIndx[2]-LonIndx[1]+1),(LatIndx[2]-LatIndx[1]+1),Count))
-      close.ncdf(temp)
+  
+       if(temp$ndims==3){
+           .Object@Layer = get.var.ncdf(temp,start=c(LonIndx[1],LatIndx[1],StartIndx),
+           count=c((LonIndx[2]-LonIndx[1]+1),(LatIndx[2]-LatIndx[1]+1),Count))
+           close.ncdf(temp)
+        }
+        if(temp$ndims==4){
+             .Object@Layer = get.var.ncdf(temp,start=c(LonIndx[1],LatIndx[1],StartIndx,ProjIndx),
+           count=c((LonIndx[2]-LonIndx[1]+1),(LatIndx[2]-LatIndx[1]+1),Count,1))
+           close.ncdf(temp) 
+        }
+     #=======================================
+     #     Reversing the order of the data if anything came 
+     #       in some way other than in increasing order
+     #=======================================
+        
+        if(!all((LatOrder<-order(.Object@Lat))==seq(1:length(.Object@Lat)))){
+           .Object@Lat<-.Object@Lat[LatOrder]
+           if(length(dim(.Object@Layer))==2) .Object@Layer<-.Object@Layer[,LatOrder]
+           if(length(dim(.Object@Layer))==3) .Object@Layer<-.Object@Layer[,LatOrder,]
+       }
+       
+        if(!all((LonOrder<-order(.Object@Lon))==seq(1:length(.Object@Lon)))){
+           .Object@Lon<-.Object@Lon[LonOrder]
+           if(length(dim(.Object@Layer))==2) .Object@Layer<-.Object@Layer[LonOrder,]
+           if(length(dim(.Object@Layer))==3) .Object@Layer<-.Object@Layer[LonOrder,,]
+       }
       
       #=====================================
       #     Convert units if necessary and possible
@@ -75,7 +114,8 @@ setMethod(f="initialize",signature="MappedData",
         return(.Object)
 		})
 
- 
+
+
 setMethod("+", signature(e1='MappedData', e2='MappedData'),
     function(e1, e2){ 
     if(e1@PlotUnits==e2@PlotUnits & all(e1@Lat==e2@Lat) & all(e1@Lon==e2@Lon)){
@@ -141,4 +181,16 @@ setMethod("/", signature(e1='MappedData', e2='numeric'),
    return(NewObject) 
 })
 
-            
+MapMean<-function(MapList){
+#this is slightly ugly and should be replace with a 
+#MapStack method and class but not today...
+ browser()
+
+}
+#setMethod("mean", signature(x='MappedData'),
+#	function(x, ..., rcp=NA, Var=FALSE){
+# 	dots <- list(...)
+#   browser()
+#   # e1@PlotUnits==e2@PlotUnits & all(e1@Lat==e2@Lat) & all(e1@Lon==e2@Lon))
+#    browser()
+#})            

@@ -1,6 +1,6 @@
 	
 setMethod("plot", signature(x='MappedData',y='ANY'),  
-    function(x,Bound,Colors,background,Main,...){ 
+    function(x,Bound,Colors,background,Main,midCol="white",...){ 
     # This function takes a boundary and a two dimensional raster 
     # long and lat should be its x and y dimenssions
    
@@ -14,6 +14,7 @@ setMethod("plot", signature(x='MappedData',y='ANY'),
               Tmax    = "Maximum~Temperature",
               Precip  = "Precipitation",
               GrnPnk     = "",
+              PurOrn  ="",
               PrecipChng = "Precipitation~Change",
               TempChng   = "Temperature~Change")
              
@@ -30,6 +31,7 @@ setMethod("plot", signature(x='MappedData',y='ANY'),
      }
     # storing some standard colors for maps and borders which can be overriddent
     if(missing(Colors)) Colors<-GenerateColors(x@Var)
+    if(midCol!="white") Colors=two.colors(n=256, start=Colors[1], end=Colors[length(Colors)], middle=midCol,alpha=1.0)
     Breaks<-SetBreaks(x@Layer,x@Var,Colors)
     
     #================================================================
@@ -39,46 +41,51 @@ setMethod("plot", signature(x='MappedData',y='ANY'),
     #================================================================
     
     if(!missing(background) & !missing(Bound)){
-    browser()  
-         Layer<- ClipToPolygon(x@Lon,x@Lat,t(x@Layer),Bound,Indicies=TRUE)
+   
+       #  x@Layer<- ClipToPolygon(x@Lon,x@Lat,t(x@Layer),Bound,Indicies=TRUE)
          #when clipping we have to remove extra rows and columns so plots look good
-         f<-function(x){sum(is.na(x))}
-         NAperRow<-apply(x@Layer,1,f)/dim(x@Layer)[2]
-         NaperCol<-apply(x@Layer,2,f)/dim(x@Layer)[2]
+         #I think I want to get rid of this because we can crop in the initialize
+         #if<-function(x){sum(is.na(x))}
+         #NAperRow<-apply(x@Layer,1,f)/dim(x@Layer)[2]
+         #NaperCol<-apply(x@Layer,2,f)/dim(x@Layer)[2]
          
                  # I have to reset these if we cropped our map
-                 Breaks<-SetBreaks(x@Layer,x@Var,Colors)
+               #  Breaks<-SetBreaks(x@Layer,x@Var,Colors)
       #================================================================
     #Plot a google map underneath the region
     #map<-openmap(Bounds[2,c(2,1)],bounds
     #================================================================
-          a<-as.matrix(Layer@data,nrow=length(Lon),byrow=TRUE)
-         
-       
+  
           baselayer<-raster(baselayer) 
           background<-intersect(baselayer,Bound)
           background<-trim(background)
           background<-as.matrix(background)
-          jet.colors=colorRampPalette( c("gray80", "gray10") )      
-          
-          image.plot(background,col=jet.colors(50))
+          jet.colors=colorRampPalette( c("gray80", "gray10") ) 
+          BgCol<-jet.colors(50)
+          #add some transparencey     
+              color.box<-col2rgb(BgCol,alpha=TRUE)
+                           color.box[4,]<-30
+                           temp.fct<-function(a){return(rgb(red=a[1],green=a[2],blue=a[3],alpha=a[4]))}
+                           BgCol<-apply(color.box/255,2,temp.fct)
+         
+          par(oma=c( 0,0,0,4))
+          image(x=x@Lon,y=x@Lat,x@Layer,col=Colors,xlab="Longitude",ylab="Latitude",main=Main)
+          image(x=seq(from=Bound@bbox[1,1],to=Bound@bbox[1,2],length=nrow(background)),
+                     y=seq(from=Bound@bbox[2,1],to=Bound@bbox[2,2],length=ncol(background)),
+                     z=background,col=BgCol,add=TRUE)
       
           map("state",col="red",add=TRUE,lwd=2)
-          image(Layer,col=Colors,add=TRUE)
+          image(x=x@Lon,y=x@Lat,x@Layer,col=Colors,add=TRUE)
+          plot(Bound,add=TRUE,lwd=5,border="black")
+         
     }else{
-          image.plot(x=x@Lon,y=x@Lat,z=x@Layer,col=Colors,xlab="Longitude",ylab="Latitude",main=Main)
+          par(oma=c( 0,0,0,4))
+          image(x=x@Lon,y=x@Lat,z=x@Layer,col=Colors,xlab="Longitude",ylab="Latitude",main=Main)
+          plot(Bound,add=TRUE,lwd=2,border="black")
       # legend("bottomright",legend=c("Park Boundary","State Boundary"),col=c("black","red"),lty=1,lwd=c(4,2),bg="white")
           map("state",col="black",add=TRUE,lwd=2)
     }
-    plot(Bound,add=TRUE,lwd=2,border="yellow")
-   
-   
-   # colrange<-seq(from=min(Layer),to=max(Layer),length=length(Colors))
-   # incLat<-diff(LatRng)*.01
-   # incLon<-diff(LonRng)*.1
-   #    rect(LonRng[2]-1*incLon,LatRng[1],LonRng[2],LatRng[1]+(length(Colors)+2)*incLat,col="white")
-   #     for(i in 1:length(colrange)){
-   #     rect(LonRng[2]-.5*incLon,LatRng[1]+incLat*i,LonRng[2],LatRng[1]+(i+1)*incLat,col=Colors[i],border=FALSE) 
-   #    }      
-    #legend("topleft",legend=c("1","2","3","4"),fill=Colors[c(2,4,6,8,10,12,14)],bg="white")
+        par(oma=c( 0,0,0,1))
+          image.plot(x@Layer,legend.only=TRUE,col=Colors)
+  
 } )

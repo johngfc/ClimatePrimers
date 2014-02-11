@@ -40,7 +40,7 @@ EmissionLinePlot<-function(Yearly,ParkName,Present){
 
 
 
-EmissionSDPlot<-function(Yearly,ParkName,Present){
+EmissionSDPlot<-function(Yearly,ParkName,Present,Main=""){
 #Yearly is a dataframe 
 #   rows = years for observations
 #   columns = to model output for an emissions scenario and climate model
@@ -54,8 +54,8 @@ EmissionSDPlot<-function(Yearly,ParkName,Present){
     Emissions<-factor(substr(colnames(Yearly),start= nchar(colnames(Yearly))-4,stop= nchar(colnames(Yearly))))
     EmissionsBgCol<-c("seagreen3","lemonchiffon","orange","red","royalblue1")
     
-    PastCol<-EmissionsCol[5]
-    EmissionsCol<-EmissionsCol[1:4]                        
+    PastCol<-EmissionsBgCol[5]
+    EmissionsCol<-EmissionsBgCol[1:4]                        
     ylabel<-as.expression(expression( paste("Celcius Temperature ( ", degree*C, ")") ))
     
   
@@ -88,7 +88,7 @@ EmissionSDPlot<-function(Yearly,ParkName,Present){
     AllAvgs<-merge(SDandAvg,PastAvg,by=1,all=TRUE)
     browser()
     Alpha<-.2
-g<- ggplot(AllAvgs,aes(x=Years,ymin=0,ymax=10)) +
+g<- ggplot(AllAvgs,aes(x=Years)) +
     geom_ribbon(aes(ymin=rcp26Avg-rcp26SD, ymax=rcp26Avg+rcp26SD,colour="rcp26"),
     alpha=Alpha,colour=EmissionsCol[1],fill=EmissionsBgCol[1]) +
     geom_line(aes(y=rcp26Avg),colour=EmissionsCol[1],size=2)+
@@ -109,7 +109,7 @@ g<- ggplot(AllAvgs,aes(x=Years,ymin=0,ymax=10)) +
     alpha=Alpha,colour=EmissionsCol[5],fill=EmissionsBgCol[5]) +
     geom_line(aes(y=Avg),colour=EmissionsCol[5],size=2)+scale_fill_manual(name="Bar",values=EmissionsCol)+
     scale_colour_manual(name="Error Bars",values=EmissionsCol)+theme(legend.position=c(.5,.5))+
-    ylab("Celcius Temperature")+labs(title = "4 Emisson Scenarios")
+    ylab("Celcius Temperature")+labs(title = "4 Emisson Scenarios")+ ggtitle(Main)
 return(g)
 }
 

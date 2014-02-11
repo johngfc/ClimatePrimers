@@ -1,4 +1,4 @@
-YearlyLinePlot<-function(InputDat,MovAvgPeriod=10,MovAvg=FALSE,LM=TRUE,Ylab,Xlab,Plot=TRUE,maCol,Months){
+YearlyLinePlot<-function(InputDat,MovAvgPeriod=10,MovAvg=FALSE,LM=TRUE,LMPeriod,Ylab,Xlab,Plot=TRUE,maCol,Months,Main=""){
     # in order to produce some line plots we need to do a couple things
     # remove incomplete years
     # clip each month to the correct shape
@@ -30,7 +30,7 @@ YearlyLinePlot<-function(InputDat,MovAvgPeriod=10,MovAvg=FALSE,LM=TRUE,Ylab,Xlab
     PlotOut <- ggplot(aes(Year, PkAvg), data=YearDat) + geom_line() + geom_point() +
     		theme(axis.text.y = element_text(size = 7)) +
     		theme(axis.title.y = element_text(size = 10, angle = 90)) +
-    		ylab(Ylab) + xlab(Xlab) +
+    		ylab(Ylab) + xlab(Xlab) + ggtitle(Main)+
     		scale_x_continuous(breaks = c(1900, 1920, 1940, 1960, 1980, 2000)) 
     		
     		if(LM) PlotOut <- PlotOut + geom_smooth(method="lm")

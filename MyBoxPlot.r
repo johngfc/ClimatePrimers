@@ -52,6 +52,4 @@ if(GroupBy=="month"){
   }
 }
 
-MyBoxplot(InputDat=PrismTmin,GroupBy = "season",BarAvg=10,HeatBy="med")
-MyBoxplot(InputDat=PrismTmin,GroupBy = "season",BarAvg=10,HeatBy="r",AllOnePlot=FALSE)
-MyBoxplot(InputDat=PrismTmin,GroupBy = "month",BarAvg=10,HeatBy="r",AllOnePlot=TRUE,Ylab=Ylab)
+

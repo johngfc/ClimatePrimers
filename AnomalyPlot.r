@@ -1,4 +1,4 @@
-AnomalyPlot <- function(InputDat,Baseline,Ylab,Months){
+AnomalyPlot <- function(InputDat,Baseline,Ylab,Months,Main){
     #barplot is going to take a baseline period and optionally a time of year and
      
      #get the fraction portion and determine which to keep based on desired months
@@ -28,5 +28,6 @@ AnomalyPlot <- function(InputDat,Baseline,Ylab,Months){
 
    ggplot(cb, aes(x=Year, y=Anomaly, fill=pos)) +
      geom_bar(stat="identity", position="identity",width=.1,alpha=.05) +
-     scale_fill_manual(values=c("slateblue1","red"), guide=FALSE)+geom_hline(yintercept=0)
+     scale_fill_manual(values=c("slateblue1","red"), guide=FALSE)+geom_hline(yintercept=0)+
+     ggtitle(Main)+ylab(Ylab)
 }        

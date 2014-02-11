@@ -10,24 +10,30 @@ ReadClimateNetCDF<-function(OutputDir,Time,Model,Var,Boundary,WholeYear=TRUE,Col
     # var = is the specific variable for a given model for Prism it's ppt tmax timin
     #       for others it's actually the model for the emissions scenario
     
-     Clim<-open.ncdf(file.path(OutputDir,"ncdf",
-                  paste(Model,Var,".nc",sep=""))) 
+     Clim<-open.ncdf(OutputDir) 
      Lat<-get.var.ncdf(Clim,"lat")
      Lon<-get.var.ncdf(Clim,"lon")
         
       #Time is recorded as days since 1858/11/17 for prism so to calcuate current time I can use something like
       #(Time)/365.25+1858.8794521  but it's easier just to parse the time range and generate a sequence
       # not deal with leap years and rounding blah, blah, blah...
-     
+       
       Time = seq(from = (as.numeric(substr(Time[1],1,4))+as.numeric(substr(Time[1],6,7))/12),
           to = (as.numeric(substr(Time[2],1,4))+as.numeric(substr(Time[2],6,7))/12),
           by = 1/12)-1/12 #so january ends up being a round number and decmber is in ther current year
       # Check that I have the right length at least
        
          tm<- get.var.ncdf(Clim,"time")
-
+      
      if(length(Time)!=length(get.var.ncdf(Clim,"time"))) stop("time dimensions are wrong")
-    RastArray<-get.var.ncdf(nc=Clim)
+    
+     ProjIndx<-switch(Var,
+                  ppt=1,
+                  tmx=2,
+                  tmn=3)
+     
+    RastArray<- get.var.ncdf(Clim,start=c(1,1,1,ProjIndx),count=c((length(Lon)),length(Lat),length(Time),1))
+   
     dimnames(RastArray)[[1]]<-Lon
     dimnames(RastArray)[[2]]<-Lat
     dimnames(RastArray)[[3]]<-Time

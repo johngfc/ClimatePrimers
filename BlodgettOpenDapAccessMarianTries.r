@@ -98,8 +98,8 @@ request_bbox<-function(ncdf4_handle,rep_var,bbox)
       if(length(y1)==2) if((bbox[2]-ncdf4_handle$dim$y$vals[y1[1]])>(bbox[2]-ncdf4_handle$dim$y$vals[y1[2]])) y1<-y1[1] else y1<-y1[2]
       if(length(x2)==2) if((bbox[3]-ncdf4_handle$dim$x$vals[x2[1]])>(bbox[3]-ncdf4_handle$dim$x$vals[x2[2]])) x2<-x2[1] else x2<-x2[2]
       if(length(y2)==2) if((bbox[4]-ncdf4_handle$dim$y$vals[y2[1]])>(bbox[4]-ncdf4_handle$dim$y$vals[y2[2]])) y2<-y2[1] else y2<-y2[2]
-      x_index<-dods_data$dim$x$vals[x1:x2]
-      y_index<-dods_data$dim$y$vals[y1:y2]
+      x_index<-ncdf4_handle$dim$x$vals[x1:x2]
+      y_index<-ncdf4_handle$dim$y$vals[y1:y2]          
     }
     else
     {
@@ -128,8 +128,8 @@ request_bbox<-function(ncdf4_handle,rep_var,bbox)
     if(length(lat1_index)==2) if((bbox[2]-ncdf4_handle$dim$lat$vals[lat1_index[1]])>(bbox[2]-ncdf4_handle$dim$lat$vals[lat1_index[2]])) lat1_index<-lat1_index[1] else lat1_index<-lat1_index[2]
     if(length(lon2_index)==2) if((bbox[3]-ncdf4_handle$dim$lon$vals[lon2_index[1]])>(bbox[3]-ncdf4_handle$dim$lon$vals[lon2_index[2]])) lon2_index<-lon2_index[1] else lon2_index<-lon2_index[2]
     if(length(lat2_index)==2) if((bbox[4]-ncdf4_handle$dim$lat$vals[lat2_index[1]])>(bbox[4]-ncdf4_handle$dim$lat$vals[lat2_index[2]])) lat2_index<-lat2_index[1] else lat2_index<-lat2_index[2]
-    x_index<-dods_data$dim$lon$vals[lon1_index:lon2_index]
-    y_index<-dods_data$dim$lat$vals[lat1_index:lat2_index]
+    x_index<-ncdf4_handle$dim$lon$vals[lon1_index:lon2_index]
+    y_index<-ncdf4_handle$dim$lat$vals[lat1_index:lat2_index]
     x1<-lon1_index
     y1<-lat1_index
     x2<-lon2_index
