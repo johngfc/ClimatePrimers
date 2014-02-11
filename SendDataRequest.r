@@ -9,7 +9,7 @@
     setwd("/data/nccsc/Private/TalbertM/MariansProjects/Climate/Rcode")
     #setwd("C:\\Users\\mallen\\Desktop\\Climate\\Rcode")
     sourceList<-list("ChkLibs.r","RequestNetCDF.R","GetParkBoundary.r",
-    "GetParkBox.r","BlodgettOpenDapAccessMarianTries.r")
+    "GetParkBox.r","InputConstants.r")
     unlist(lapply(sourceList,source))
     
     ChkLibs(list("ncdf4","shapefiles","maptools","raster"))
