@@ -11,9 +11,11 @@ RequestNetCDF<-function(BoundBox,URI,ModelList,Start,End,OutputNcdfDir,FileName=
       #   we're just picking off the indicies we need which are common so we can just look at the first
       #   without loss of generality
       #===========================================
-      OutputNcdfPath<-file.path(OutputNcdfDir,ParkCode,FileName)
+      OutputNcdfPath<-file.path(OutputNcdfDir,FileName)
+      
       if(FileName=="Nex.nc") OPeNDAP_URI<-paste(URI,"/",names(ModelList)[1],"/r1i1p1/",ModelList[[1]][1],".","ncml",sep="")
-      if(FileName=="Prism.nc")
+      if(FileName=="Prism.nc") OPeNDAP_URI<-URI
+      
       dods_data <- nc_open(OPeNDAP_URI) 
       model<-ModelList[[1]][1]
      
@@ -52,7 +54,7 @@ RequestNetCDF<-function(BoundBox,URI,ModelList,Start,End,OutputNcdfDir,FileName=
       
       
       X<-ncvar_def("tas","K",list(x,y,tm,proje),dods_data$var$lon$missval) #name, unit, vals, missing value
-      if(!file.exists(dirname(OutputNcdfPath))) file.create(dir.create(dirname(OutputNcdfPath)))
+       
       ncout<-nc_create(OutputNcdfPath,vars=list(X)) 
     
       count<-1
@@ -61,10 +63,12 @@ RequestNetCDF<-function(BoundBox,URI,ModelList,Start,End,OutputNcdfDir,FileName=
       #   loop through rcp,model and time and pull 
       #   down the data requested
       #===========================================    
-        
+            
       for(rcp in 1:length(ModelList)){ 
         for(model in 1:length(ModelList[[rcp]])){
-           dods_data=paste(Nex,names(ModelList)[rcp],"r1i1p1",paste(ModelList[[rcp]][model],"ncml",sep="."),sep="/")
+      
+           if(FileName=="Nex.nc") dods_data=paste(URI,names(ModelList)[rcp],"r1i1p1",paste(ModelList[[rcp]][model],"ncml",sep="."),sep="/")
+           if(FileName=="Prism.nc") dods_data=URI
            dods_data<-nc_open(dods_data)
            tmax_data<-list()
            timeCount<-1     
@@ -75,7 +79,8 @@ RequestNetCDF<-function(BoundBox,URI,ModelList,Start,End,OutputNcdfDir,FileName=
                 
                  ncvar_put(ncout,varid="tas",vals=tmax,
                    start=c(1,1,timeCount,count),
-                   count=c(length(x_index),length(y_index),(tIndex[[t]]$t_ind2-tIndex[[t]]$t_ind1),1))                 
+                   count=c(length(x_index),length(y_index),
+                   (tIndex[[t]]$t_ind2-tIndex[[t]]$t_ind1),1))                 
                  timeCount<-timeCount+(tIndex[[t]]$t_ind2-tIndex[[t]]$t_ind1)
               }
              
