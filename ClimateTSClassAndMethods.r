@@ -1,21 +1,21 @@
  setClass("ClimateTS",
-  representation=list(Ts="matrix",Time="POSIXct",Year="vector",Month="vector",PlotUnits="character",Var="vector",
+  representation=list(Ts="numeric",Time="POSIXct",Year="vector",Month="vector",PlotUnits="character",Var="vector",
           SourcePath="character"))
 
-ClimateTS = function(InputNCDF,Model,Var,Boundary,PlotUnits,UnitMap,WholeYear=TRUE){
-	Ts = new("ClimateTS",InputNCDF,Model,Var,Boundary,PlotUnits,UnitMap,WholeYear)
+ClimateTS = function(InputNCDF,Var,Boundary,PlotUnits,UnitMap,WholeYear=TRUE,ModelKeyPath=NA,Clip=TRUE){
+	Ts = new("ClimateTS",InputNCDF,Var,Boundary,PlotUnits,UnitMap,WholeYear,ModelKeyPath,Clip=TRUE)
 	return(Ts)
 }
 
 setMethod(f="initialize",signature="ClimateTS",
-	definition=function(.Object,InputNCDF,Model,Var,Boundary,PlotUnits,UnitMap,WholeYear){
+	definition=function(.Object,InputNCDF,Var,Boundary,PlotUnits,UnitMap,WholeYear,ModelKeyPath,Clip=TRUE){
 	
         Clim<-open.ncdf(InputNCDF)
 
         Lat<-get.var.ncdf(Clim,UnitMap$latName)
         Lon<-get.var.ncdf(Clim,UnitMap$lonName)
-        tm<- get.var.ncdf(Clim,UnitMap$lonName)
-        UnitIn = toupper(as.character(UnitMap[names(UnitMap)==Var]))
+        tm <- get.var.ncdf(Clim,UnitMap$timeName)
+        UnitIn <- toupper(as.character(UnitMap[names(UnitMap)==Var]))
 
         if(any(Lon>0)) Lon<-Lon-360
         #===============================
@@ -25,12 +25,14 @@ setMethod(f="initialize",signature="ClimateTS",
           #86400 is the number of seconds in a day POSIXct expects seconds since
           #the origin this might be funky on leap days. tm is in days since origin
          .Object@Time <- as.POSIXct(tm*86400, origin = UnitMap$TimeOrigin)
-         .Object@Year = as.numeric(format(.Object@Time,"%Y"))
-         .Object@Month = as.numeric(format(.Object@Time,"%m"))
-
-    browser()
-
-    ProjIndx<-1 #only for prism
+         .Object@Year <- as.numeric(format(.Object@Time,"%Y"))
+         .Object@Month <- as.numeric(format(.Object@Time,"%m"))
+         .Object@PlotUnits <- PlotUnits
+         .Object@SourcePath <- InputNCDF
+    ProjIndx<-switch(Var,
+       ppt=1,
+       tmx=2,
+       tmn=3) #only for prism
     #====================================
     # here we loop through pull in and if desired clip the data
     #===================================
@@ -45,8 +47,17 @@ setMethod(f="initialize",signature="ClimateTS",
                 if(j==1 & Clip){
                     #I can't always clip because not always are there points inside the boundary
                     #figure out the clipping just once because it's quite time consuming
+                  browser()
+                    a<-ClipToPolygon(Lon,Lat,(RastArray[,,j]),Boundary,Indicies=TRUE)
+                    LonLat<-expand.grid(Lon,Lat)
+                    o<-order(LonLat)
+                    #Clipping reverses the longitude dimension
+                    #we can get the indicies by doing a modulus other dimension
+                    #on the grid index
 
-                    a<-ClipToPolygon(Lon,Lat,(RastArray[,,j]),Boundary,Indicies=FALSE)
+                    LonInd<-a@grid.index%%length(Lat)
+                    LatInd<-a@grid.index%%length(Lon)
+                    indicies<-cbind(LatInd,LonInd)
                     indicies=data.frame()
                        for(k in 1:length(Lat)){ #this is sloppy there should be a better way to do this
                        #I have to get the indicies for the clipping so that I can clip the array
@@ -57,8 +68,10 @@ setMethod(f="initialize",signature="ClimateTS",
                               else indicies<-rbind(indicies,cbind(m,k))
                           }} }}
                   }
-                  if(!Clip) ClippedDat<-apply(RastArray,1,mean) # collapse this to one less dimension to match the next line
-                  else ClippedDat<-apply(RastArray, 3, function(x) x[indicies]) #indexing in multidimensional arrays is less than intuitive
+                   r<-RastArray[rev(seq(1:length(Lon))),seq(1:length(Lat)),seq(1:length(.Object@Time))]
+                  browser()
+                  if(!Clip) indicies<-expand.grid(1:length(Lon),1:length(Lat))
+                  ClippedDat<-apply(RastArray, 3, function(x) x[indicies]) #indexing in multidimensional arrays is less than intuitive
 
 
             #here we always have to collapse over the pixels
@@ -69,22 +82,45 @@ setMethod(f="initialize",signature="ClimateTS",
     #===========================================
     # remove years for which we only have a portion of the year
     # because they cause funkiness
+
     if(WholeYear){
       if(any(table(.Object@Year)!=12)){
 
-          IncompleteYrs <- which(Year%in%(names(table(Year))[table(Year)!=12]),arr.ind=TRUE)
-          OutputFrame <- OutputFrame[-c(IncompleteYrs),]
+          IncompleteYrs <- which(.Object@Year%in%(names(table(.Object@Year))[table(.Object@Year)!=12]),arr.ind=TRUE)
+          if(InputNCDF=="Prism.nc") OutputFrame <- OutputFrame[-c(IncompleteYrs)]
+          else  OutputFrame <- OutputFrame[-c(IncompleteYrs),]
           .Object@Time <- .Object@Time[-c(IncompleteYrs)]
           .Object@Year <- .Object@Year[-c(IncompleteYrs)]
           .Object@Month <- .Object@Month[-c(IncompleteYrs)]
           }
      }
-     
+      UnitIn <- toupper(as.character(UnitMap[names(UnitMap)==Var]))
+
      if (.Object@PlotUnits != UnitIn)
           .Object@Ts<-Convert(UnitIn,.Object@PlotUnits,.Object@Layer)
-          
-     if(InputNCDF=="Prism.nc")
-      .Object@Ts<-OutputFrame
+
+     .Object@Ts<-OutputFrame
+
+     if(InputNCDF=="Prism.nc"){
+     .Object@Var<-Var
+     return(.Object)
+     }
+     #==============================================
+     # this last part should probably be put into a new
+     # object that extends the current object but not today...
+     #==============================================
+     if(Var%in%c("tasmax","tasmin")){
+      #not all models were run for tasmin and tasmax so we need to remove those that weren't
+      RawMetaData<-scan(ModelKeyPath,what="raw",sep="\n")
+      Rm<-grep(Var,RawMetaData)
+      if(length(Rm)>0) ModelKey<-ModelKey[-c(Rm)]
+     }
+
+
+    if(ncol(OutputFrame)==length(ModelKey)){ #not the case for tasmin tasmax I need to
+      #read in and parse the metadata to figure it out
+      colnames(OutputFrame)<-ModelKey
+    }
     
      Emissions<-factor(substr(colnames(Yearly),start= nchar(colnames(Yearly))-4,stop= nchar(colnames(Yearly))))
     colnames(ClippedDat)<-Time
@@ -92,4 +128,4 @@ setMethod(f="initialize",signature="ClimateTS",
    return(ClippedDat)
 })
 
-Prismppt <- ClimateTS(PrismPath,Model="prism",Var="ppt",Boundary=Boundary,PlotUnits="C",UnitMap=UnitLookup$Prism)
+Prismppt <- ClimateTS(PrismPath,Var="ppt",Boundary=Boundary,PlotUnits="MM",UnitMap=UnitLookup$Prism,ModelKeyPath=ModelKeyPath)
