@@ -4,7 +4,7 @@
 #=============================================
     setwd("C:\\GoogleDrive\\Climate\\Rcode")
     #setwd("C:\\Users\\mallen\\Desktop\\Climate\\Rcode")
-    sourceList<-list("ChkLibs.r","ClipToPolygon.r","MyPlotSetup.r","GetParkBoundary.r","GetParkBox.r","PlotClimOverMap.r",
+    sourceList<-list("ChkLibs.r","ClipToPolygon2.r","MyPlotSetup.r","GetParkBoundary.r","GetParkBox.r","PlotClimOverMap.r",
        "GDPNexPrismGrab.r","InputConstants.r","YearlyLinePlot.r","AnomalyPlot.r","ReadClimateNetCDF.r",
        "month.day.year.r","GenerateColors.r","Convert","PlotMappedDataClass","ClassesAndMethods")
     unlist(lapply(sourceList,source))
@@ -57,22 +57,14 @@
   BoundBox <- GetParkBox(Bndry=NpsShapes,ParkCode) 
   Boundary <- GetParkBoundary(Bndry=NpsShapes,ParkCode)  
   
-#read in PRISM and NEX CMIP5 for the desired park by submitting the shape file 
-#===========================================
-#using rGDP
-#requestNetCDF(BoundBox,URI,ModelList,Start,End,OutputNcdfPath=filepath(,varname)
-#GDPNexPrismGrab(BoundBox,GCMTime,HistoricTime,Model,OutputDir)
- 
-#This will probably be replaced by downloading directly from the GDO http://gdo-dcp.ucllnl.org/downscaled_cmip_projections/dcpInterface.html#Welcome
-# for coarse resolution, hydrology, swe, and mauer 1/8th degree
-#into the correctly labeled folder using BlodgettOpenDapAccess with commands similar to BlodgettTest for the NEX and maybe prism as well  
 #============================================
-# Data formatting steps 
+# Reading in and formatting time series data (Prism/GDO) eventually Mauer and maybe nex 
 #============================================
-Prismppt <- ReadClimateNetCDF(OutputDir,Time=HistoricTime,Model="prism",Var="ppt",Boundary=Boundary)
-PrismTmin <- ReadClimateNetCDF(OutputDir,Time=HistoricTime,Model="prism",Var="tmn",Boundary=Boundary)
-PrismTmax <- ReadClimateNetCDF(OutputDir,Time=HistoricTime,Model="prism",Var="tmx",Boundary=Boundary)
-
+Prismppt <- ClimateTS(PrismPath,Var="ppt",Boundary=Boundary,PlotUnits="mm",UnitMap=UnitLookup$Prism,ModelKeyPath=ModelKeyPath)
+PrismTmin <- ClimateTS(PrismPath,Var="tmn",Boundary=Boundary,PlotUnits="C",UnitMap=UnitLookup$Prism,ModelKeyPath=ModelKeyPath)
+PrismTmax <- ClimateTS(PrismPath,Var="tmx",Boundary=Boundary,PlotUnits="C",UnitMap=UnitLookup$Prism,ModelKeyPath=ModelKeyPath)
+  
+GDOClim<-ClimateTS(GDOPath,Boundary,Var="tas",ModelKeyPath=ModelKeyPath,UnitMap=UnitLookup$GDO,PlotUnits="C")
 #============================================
 # Producing line plots with rolling averages 
 #============================================

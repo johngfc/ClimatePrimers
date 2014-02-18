@@ -1,10 +1,13 @@
 	
 setMethod("plot", signature(x='MappedData',y='ANY'),  
-    function(x,Bound,Colors,background,Main,midCol="white",...){ 
+    function(x,Bound,Colors,background,Main,midCol="white",DisplayOutput,OutputGraphics,...){ 
     # This function takes a boundary and a two dimensional raster 
     # long and lat should be its x and y dimenssions
    
-    
+      if(!DisplayOutput){ jpeg(file.path(OutputGraphics,
+       paste(x@Projection,x@Year,"Map.jpeg",sep="_")),height=1000,width=1000)
+        on.exit(dev.off())
+        }
      if(missing(Main)){ # we have units and the value being plotted
      #so we can stitch together a main title
      quant<-switch(x@Var,
@@ -87,5 +90,6 @@ setMethod("plot", signature(x='MappedData',y='ANY'),
     }
         par(oma=c( 0,0,0,1))
           image.plot(x@Layer,legend.only=TRUE,col=Colors)
+          
   
 } )

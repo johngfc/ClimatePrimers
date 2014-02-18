@@ -11,6 +11,7 @@ rcp85 = c('ACCESS1-0_pr','ACCESS1-0_tasmax','ACCESS1-0_tasmin','BNU-ESM_pr','BNU
 prism =c('ppt','tmx','tmn'))  
 
 #The units for each netcdf is stored in the metadata I save it here so I can convert units as need
+#these have many aliases
 #Time origin is the origin for the julian date (days since x)
 UnitLookup<-list(Nex=list(TimeOrigin = "1950-01-01T00:00:00Z",
                           Temp = "K",
@@ -24,8 +25,11 @@ UnitLookup<-list(Nex=list(TimeOrigin = "1950-01-01T00:00:00Z",
                  Prism=list(TimeOrigin ='1858-11-17T00:00:00Z',
                             Temp ="C",
                             Tmin ="C",
+                            tmx ="C",
+                            tmn ="C",
                             Tmax ="C",
-                            Precip ="MM",
+                            Precip ="mm",
+                            ppt ="mm",
                             latName = "lat",
                             lonName = "lon",
                             timeName = "time"
@@ -34,7 +38,11 @@ UnitLookup<-list(Nex=list(TimeOrigin = "1950-01-01T00:00:00Z",
                             Temp ="C",
                             Tmin ="C",
                             Tmax ="C",
-                            Precip ="MM",
+                            tas ="C",
+                            tasmin ="C",
+                            tastmax="C",
+                            Precip ="mm",
+                            pr ="mm",
                             latName = "latitude",
                             lonName = "longitude",
                             timeName = "time"
@@ -43,11 +51,46 @@ UnitLookup<-list(Nex=list(TimeOrigin = "1950-01-01T00:00:00Z",
                             Temp ="C",
                             Tmin ="C",
                             Tmax ="C",
-                            Precip ="MM",
+                            Precip ="mm",
                             latName = "latitude",
                             lonName = "longitude",
                             timeName = "time"
                             )                                         
                  )                    
                           
+GenerateLab<-function(Var,PlotUnits,addTime=FALSE,Month,Year){
+    
+ quant<-switch(Var,
+              Temp    = "Temperature",
+               Tas     = "Average~Temperature",
+              Tmin    = "Minimum~Temperature",
+              Tmax    = "Maximum~Temperature",
+              tmx     ="Maximum~Temperature",
+              Precip  = "Precipitation",
+              GrnPnk     = "",
+              PurOrn  ="",
+              PrecipChng = "Precipitation~Change",
+              TempChng   = "Temperature~Change")
+           
+           #setting a default label and changing it in a few special cases 
+            Main = paste(quant, PlotUnits,sep="~")
+           if(toupper(PlotUnits)%in%c("C","F","K")){
+               Main<-paste(quant, "~({}^o*",PlotUnits,")",sep="")
+            } 
+            if(toupper(PlotUnits)=="MM"){
+               Main<-paste(quant, "(mm / month)",sep="")
+            } 
+            if(PlotUnits=="kgm2s1"){
+            Main = paste(quant,(kg*m^2*s^1),sep="~")
+            } 
+            if(addTime){ Main = paste(
+                     ifelse(length(x@Month==1),paste(month.name[Month],"~",sep=""),""),
+                     ifelse(length(x@Year==1),Year,paste(min(Year),"~to~",max(Year),sep="")),
+                     "~",Main,
+                     sep="")
+                 }
+                
+           Main = parse(text=Main)
+           return(Main) 
+}
  

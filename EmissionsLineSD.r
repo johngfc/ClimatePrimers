@@ -1,5 +1,5 @@
-EmissionLinePlot<-function(Yearly,ParkName,Present){
-#Yearly is a dataframe 
+EmissionLinePlot<-function(InputDat,ParkName,Present,DisplayOutput,OutputGraphics){
+#InputDat is a dataframe 
 #   rows = years for observations
 #   columns = to model output for an emissions scenario and climate model
 #   rownames = year
@@ -7,9 +7,11 @@ EmissionLinePlot<-function(Yearly,ParkName,Present){
 #ParkName = The name of the park for the title
 #Present = The current year for determining color break 
 #Written by Marian Talbert 10/2013
- 
-    Years<-as.numeric(rownames(Yearly))
-    Emissions<-factor(substr(colnames(Yearly),start= nchar(colnames(Yearly))-4,stop= nchar(colnames(Yearly))))
+    
+    InputDat<-YrAgg(InputDat)
+  
+    if(!DisplayOutput) jpeg(file.path(OutputGraphics,
+       paste(InputDat@Var,min(InputDat@Year),"to",max(InputDat@Year),"EmissionsLine.jpeg",sep="_")),height=1000,width=1000)
     EmissionsCol<-c("seagreen3","lemonchiffon","orange","red","royalblue1")
     color.box<-col2rgb(EmissionsCol,alpha=TRUE)
                            color.box[4,]<-150
@@ -20,28 +22,29 @@ EmissionLinePlot<-function(Yearly,ParkName,Present){
     ylabel<-as.expression(expression( paste("Celcius Temperature ( ", degree*C, ")") ))
     
      par(mar=c(5,5,4,2))                        
-    MyPlot(Years,range(Yearly),drawGrid=TRUE,cexMult=1,bgCol="grey38",
+    MyPlot(InputDat@Year,range(InputDat@Ts),drawGrid=TRUE,cexMult=1,bgCol="grey38",
         main=paste("Average Surface Air Temperature for ",ParkName,"\nUnder Four Emissions Scenarios",sep=""),xlab="Year",ylab=ylabel)
     
-    for (i in 1:ncol(Yearly)){
-      lines(Years[Years>=Present],Yearly[Years>=Present,i],col=EmissionsCol[Emissions[i]],lwd=1.9)
-      lines(Years[Years<=Present],Yearly[Years<=Present,i],col=PastCol,lwd=.75)
+    for (i in 1:ncol(InputDat@Ts)){
+      lines(InputDat@Year[InputDat@Year>=Present],InputDat@Ts[InputDat@Year>=Present,i],col=EmissionsCol[InputDat@Rcp[i]],lwd=1.9)
+      lines(InputDat@Year[InputDat@Year<=Present],InputDat@Ts[InputDat@Year<=Present,i],col=PastCol,lwd=.75)
       }
     #plotting the avg of everything before the present  
-    lines(Years[Years<=Present],apply(Yearly[Years<=Present,],1,mean),lwd=4,col="royalblue4") 
+    lines(InputDat@Year[InputDat@Year<=Present],apply(InputDat@Ts[InputDat@Year<=Present,],1,mean),lwd=4,col="royalblue4") 
       #Now plotting avgs by emissions scenario
     EmissionsCol<-c("green4","yellow","darkorange3","red4")
-   
+       
     for(i in 1:4){
-        a<-apply(Yearly[Years>=Present,Emissions==levels(Emissions)[i]],1,mean)
-        lines(Years[Years>=Present],a,lwd=4,col=EmissionsCol[i])  
-  } 
+        a<-apply(InputDat@Ts[InputDat@Year>=Present,InputDat@Rcp==levels(InputDat@Rcp)[i]],1,mean)
+        lines(InputDat@Year[InputDat@Year>=Present],a,lwd=4,col=EmissionsCol[i])  
+  }
+   if(!DisplayOutput) dev.off()   
 }
 
 
 
-EmissionSDPlot<-function(Yearly,ParkName,Present,Main=""){
-#Yearly is a dataframe 
+EmissionSDPlot<-function(InputDat,ParkName,Present,Main="",DisplayOutput,OutputGraphics){
+#InputDat is a dataframe 
 #   rows = years for observations
 #   columns = to model output for an emissions scenario and climate model
 #   rownames = year
@@ -49,45 +52,45 @@ EmissionSDPlot<-function(Yearly,ParkName,Present,Main=""){
 #ParkName = The name of the park for the title
 #Present = The current year for determining color break 
 #Written by Marian Talbert 10/2013
- 
-    Years<-as.numeric(rownames(Yearly))
-    Emissions<-factor(substr(colnames(Yearly),start= nchar(colnames(Yearly))-4,stop= nchar(colnames(Yearly))))
-    EmissionsBgCol<-c("seagreen3","lemonchiffon","orange","red","royalblue1")
-    
-    PastCol<-EmissionsBgCol[5]
-    EmissionsCol<-EmissionsBgCol[1:4]                        
-    ylabel<-as.expression(expression( paste("Celcius Temperature ( ", degree*C, ")") ))
-    
-  
-    
+        #=======================
+        # aggregate to yearly
+   InputDat<-YrAgg(InputDat)
+        
+   if(!DisplayOutput) jpeg(file.path(OutputGraphics,
+      paste(InputDat@Var,min(InputDat@Year),"to",max(InputDat@Year),"EmissionsSD.jpeg",sep="_")),height=1000,width=1000)
+               
+   ylabel<-as.expression(expression( paste("Celcius Temperature ( ", degree*C, ")") ))
+      
     #Now plotting avgs by emissions scenario
    SDandAvg<-data.frame()
-   EmissionsBgCol<-c("seagreen3","lemonchiffon","orange","red","royalblue1")
-    EmissionsCol<-c("green4","yellow","darkorange3","red4")
     
-     EmissionsBgCol<-c("green","yellow","orange","red","slateblue1")
-    EmissionsCol<-c(rcp26="green3",rcp45="yellow",rcp60="orange",rcp85="red",past="slateblue3")
+   EmissionsBgCol<-c("green","yellow","orange","red","slateblue1")
+   EmissionsCol<-c(rcp26="green3",rcp45="yellow",rcp60="orange",rcp85="red",past="slateblue3")
+   PastCol<-EmissionsBgCol[5]
+  
    #getting the avg and sd for each emissions scenario and future time
     for(i in 1:4){
-        Avg<-apply(Yearly[Years>=Present,Emissions==levels(Emissions)[i]],1,mean)
-        SD<-apply(Yearly[Years>=Present,Emissions==levels(Emissions)[i]],1,sd)
+        Avg<-apply(InputDat@Ts[InputDat@Year>=Present,InputDat@Rcp==levels(InputDat@Rcp)[i]],1,mean)
+        SD<-apply(InputDat@Ts[InputDat@Year>=Present,InputDat@Rcp==levels(InputDat@Rcp)[i]],1,sd)
         if(ncol(SDandAvg)==0) SDandAvg<-cbind(Avg,SD)
         else SDandAvg<-cbind(SDandAvg,Avg,SD)
-        colnames(SDandAvg)[(ncol(SDandAvg)-1):ncol(SDandAvg)]<-c(paste(levels(Emissions)[i],"Avg",sep=""),paste(levels(Emissions)[i],"SD",sep=""))
+        colnames(SDandAvg)[(ncol(SDandAvg)-1):ncol(SDandAvg)]<-c(paste(levels(InputDat@Rcp)[i],"Avg",sep=""),paste(levels(InputDat@Rcp)[i],"SD",sep=""))
         }
+        
   #sd and avg for past and present time
-   Avg<-apply(Yearly[Years<=Present,],1,mean)
-        SD<-apply(Yearly[Years<=Present,],1,sd)
-        PastAvg<-data.frame(Years=Years[Years<=Present],Avg=Avg,SD=SD)
+   Avg<-apply(InputDat@Ts[InputDat@Year<=Present,],1,mean)
+        SD<-apply(InputDat@Ts[InputDat@Year<=Present,],1,sd)
+        PastAvg<-data.frame(Years=InputDat@Year[InputDat@Year<=Present],Avg=Avg,SD=SD)
     rng<-range(SDandAvg)
             
-    SDandAvg<-cbind(Years[Years>=Present],SDandAvg)
+    SDandAvg<-cbind(InputDat@Year[InputDat@Year>=Present],SDandAvg)
     colnames(SDandAvg)[1]<-"Years"
-     #names(SDandAvg)[2:3]<-c("Avg","SD")
+    
     SDandAvg<-as.data.frame(SDandAvg)
     AllAvgs<-merge(SDandAvg,PastAvg,by=1,all=TRUE)
-    browser()
+   
     Alpha<-.2
+    
 g<- ggplot(AllAvgs,aes(x=Years)) +
     geom_ribbon(aes(ymin=rcp26Avg-rcp26SD, ymax=rcp26Avg+rcp26SD,colour="rcp26"),
     alpha=Alpha,colour=EmissionsCol[1],fill=EmissionsBgCol[1]) +
@@ -110,6 +113,8 @@ g<- ggplot(AllAvgs,aes(x=Years)) +
     geom_line(aes(y=Avg),colour=EmissionsCol[5],size=2)+scale_fill_manual(name="Bar",values=EmissionsCol)+
     scale_colour_manual(name="Error Bars",values=EmissionsCol)+theme(legend.position=c(.5,.5))+
     ylab("Celcius Temperature")+labs(title = "4 Emisson Scenarios")+ ggtitle(Main)
+plot(g) 
+     if(!DisplayOutput) dev.off()  
 return(g)
 }
 

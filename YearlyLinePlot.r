@@ -1,4 +1,4 @@
-YearlyLinePlot<-function(InputDat,MovAvgPeriod=10,MovAvg=FALSE,LM=TRUE,LMPeriod,Ylab,Xlab,Plot=TRUE,maCol,Months,Main=""){
+YearlyLinePlot<-function(InputDat,MovAvgPeriod=10,MovAvg=FALSE,LM=TRUE,LMPeriod,Ylab,Xlab,Plot=TRUE,maCol,Months,Main="",DisplayOutput,OutputGraphics){
     # in order to produce some line plots we need to do a couple things
     # remove incomplete years
     # clip each month to the correct shape
@@ -15,18 +15,17 @@ YearlyLinePlot<-function(InputDat,MovAvgPeriod=10,MovAvg=FALSE,LM=TRUE,LMPeriod,
     
     # @data contains the data of the clipped a
        #now average over the months for each year and over the pixels
-    
-    
+    if(!DisplayOutput) jpeg(file.path(OutputGraphics,
+       paste(InputDat@Var,min(InputDat@Year),"to",max(InputDat@Year),"Line.jpeg",sep="_")),height=1000,width=1000) 
+       
     if(missing(Months)) Months=seq(1:12)
-     Month <- as.numeric(names(InputDat))%%1 
-     Keep <- round(Month,digits=3)%in%round(c((Months-1)/12),digits=3)
-     InputDat <- InputDat[Keep]
     
-    Year <- floor(as.numeric(names(InputDat))) 
-    YearlyPkAvg <- aggregate(InputDat,FUN=mean,by=list(Year=Year))[,2]
-    rollAvg <- c(rep(NA,times=MovAvgPeriod-1),rollmean(YearlyPkAvg, MovAvgPeriod))
-    YearDat<-data.frame(Year=unique(Year),PkAvg=YearlyPkAvg,rollAvg=rollAvg)
+     Keep <- InputDat@Month%in%Months
      
+    YearlyPkAvg <- aggregate(InputDat@Ts[Keep],FUN=mean,by=list(Year=InputDat@Year[Keep]))[,2]
+    rollAvg <- c(rep(NA,times=MovAvgPeriod-1),rollmean(YearlyPkAvg, MovAvgPeriod))
+    YearDat<-data.frame(Year=unique(InputDat@Year[Keep]),PkAvg=YearlyPkAvg,rollAvg=rollAvg)
+    
     PlotOut <- ggplot(aes(Year, PkAvg), data=YearDat) + geom_line() + geom_point() +
     		theme(axis.text.y = element_text(size = 7)) +
     		theme(axis.title.y = element_text(size = 10, angle = 90)) +
@@ -36,6 +35,7 @@ YearlyLinePlot<-function(InputDat,MovAvgPeriod=10,MovAvg=FALSE,LM=TRUE,LMPeriod,
     		if(LM) PlotOut <- PlotOut + geom_smooth(method="lm")
         if(MovAvg) PlotOut <- PlotOut + geom_line(aes(y=rollAvg),colour=maCol,size=2)
         if(Plot) plot(PlotOut)
+      if(!DisplayOutput) dev.off()  
 		return(PlotOut)
 }
 
