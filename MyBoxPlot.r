@@ -1,13 +1,13 @@
  
 
-MyBoxplot<-function(InputDat,GroupBy = "season",BarAvg=10,HeatBy="med",AllOnePlot=TRUE,Col=NA,Main="",Ylab,DisplayOutput,OutputGraphics){
+MyBoxplot<-function(InputDat,GroupBy = "season",BarAvg=10,HeatBy="med",AllOnePlot=TRUE,Col=NA,Main="",Ylab,DisplayOutput,OutputGraphics,cexMult){
 #  InputDat =
 #  GroupBy = season, month or year 
 #  BarAvg = length of time to represent each bar 10 InputDat@Years by default but can be none
 #  HeatBy = "med"(median) or "recent" how the color scale is organized
-
-if(!DisplayOutput){ jpeg(file.path(OutputGraphics,
-       paste(InputDat@Var,min(InputDat@Year),"to",max(InputDat@Year),"HeatBy",HeatBy,"Box.jpeg",sep="_")),height=1000,width=1000)
+if(missing(Ylab)) Ylab=GenerateLab(InputDat)
+if(!DisplayOutput){ png(file.path(OutputGraphics,
+       paste(InputDat@Var,min(InputDat@Year),"to",max(InputDat@Year),"HeatBy",HeatBy,"Box.png",sep="_")),height=1000,width=1000)
        on.exit(dev.off()) 
         } 
 

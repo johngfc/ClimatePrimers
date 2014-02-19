@@ -1,11 +1,11 @@
 
-ImagePlot<-function(InputDat,Ylab="",Xlab="",Plot=TRUE,Months,Colors,Baseline=c(1950,1980),Main,ColVar="TempChng",cex.mult=1,
+ImagePlot<-function(InputDat,Ylab="",Xlab="",Plot=TRUE,Months,Colors,Baseline=c(1950,1980),Main,ColVar="TempChng",cexMult=1,
 DisplayOutput=DisplayOutput,OutputGraphics=OutputGraphics){
      Call<-match.call()
 #this doesn't look great for my current dataset but maybe eventually 
       
-    if(!DisplayOutput){ jpeg(file.path(OutputGraphics,
-       paste(Call$InputDat,"Baseline",min(Baseline),"to",max(Baseline),"Image.jpeg",sep="_")),height=1000,width=500)
+    if(!DisplayOutput){ png(file.path(OutputGraphics,
+       paste(Call$InputDat,"Baseline",min(Baseline),"to",max(Baseline),"Image.png",sep="_")),height=1000,width=500)
         on.exit(dev.off())
         }
     if(missing(Main)) Main= paste(Call$InputDat,"with Baseline\n",min(Baseline),"to",max(Baseline),sep=" ")

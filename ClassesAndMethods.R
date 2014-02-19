@@ -17,7 +17,7 @@ setMethod(f="initialize",signature="MappedData",
 		.Object@PlotUnits = toupper(PlotUnits)
 		.Object@Lat = get.var.ncdf(temp,varid=UnitMap$latName)
 		.Object@Lon = get.var.ncdf(temp,varid=UnitMap$lonName)
-		.Object@Var = Var
+		.Object@Var = StandardUnits(Var)
      if(any(.Object@Lon>0)) .Object@Lon<-.Object@Lon-360
 		#=======================================
     #    Setting up temporal aspects

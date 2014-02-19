@@ -21,7 +21,7 @@ setMethod(f="initialize",signature="ClimateTS",
         #===============================
         # constructiong the time components
         #===============================
-        
+          
           #86400 is the number of seconds in a day POSIXct expects seconds since
           #the origin this might be funky on leap days. tm is in days since origin
          .Object@Time <- as.POSIXct(tm*86400, origin = UnitMap$TimeOrigin)
@@ -29,7 +29,7 @@ setMethod(f="initialize",signature="ClimateTS",
          .Object@Month <- as.numeric(format(.Object@Time,"%m"))
          .Object@PlotUnits <- PlotUnits
          .Object@SourcePath <- InputNCDF
-         .Object@Var<-Var
+         .Object@Var<-StandardUnits(Var)
     #this section should eventually be moved out to something that extends the original object
     if(.Object@SourcePath=="Prism.nc"){
         ProjIndx<-switch(Var,
@@ -82,7 +82,7 @@ setMethod(f="initialize",signature="ClimateTS",
       UnitIn <- as.character(UnitMap[names(UnitMap)==Var])
       
      .Object@Ts<-as.matrix(OutputFrame)
-       
+     
      if (.Object@PlotUnits != UnitIn)
           .Object@Ts<-Convert(toupper(UnitIn),toupper(.Object@PlotUnits),.Object@Ts)
  

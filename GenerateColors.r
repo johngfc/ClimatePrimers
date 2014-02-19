@@ -15,7 +15,6 @@ GenerateColors<-function(mapType){
     #choose the color ramp
       color<-switch(mapType,
               Temp    = brewer.pal(brewer.pal.info["YlOrRd",]$maxcolors,"YlOrRd"),
-              Tas     = brewer.pal(brewer.pal.info["YlOrRd",]$maxcolors,"YlOrRd"),
               Tmin    = brewer.pal(brewer.pal.info["YlOrRd",]$maxcolors,"YlOrRd"),
               Tmax    = brewer.pal(brewer.pal.info["YlOrRd",]$maxcolors,"YlOrRd"),
               Precip  = brewer.pal(brewer.pal.info["GnBu",]$maxcolors,"GnBu"),

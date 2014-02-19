@@ -1,12 +1,12 @@
 
-Scatter<-function(Tavg,Pr,Baseline=c(1950,1980),PlotTime=c(2050,2060),rcp,DisplayOutput,OutputGraphics,Main){
+Scatter<-function(Tavg,Pr,Baseline=c(1950,1980),PlotTime=c(2050,2060),rcp,DisplayOutput,OutputGraphics,Main,cexMult){
  # compare the Average temperature and preciptation for a historic baseline to projections
  # under the selected RCPs
       if(missing(rcp)) rcp=c("rcp45","rcp85") 
       if(missing(Main)) Main=paste("Projected Change from",Baseline[1],"to",Baseline[2], "baseline to",
              PlotTime[1],"to",PlotTime[2], "\nfor", paste(rcp,collapse=","))
-       if(!DisplayOutput){ jpeg(file.path(OutputGraphics,
-             paste("RCP", paste(rcp,collapse="_"),"Scatter.jpeg",sep="_")),height=1000,width=1000)
+       if(!DisplayOutput){ png(file.path(OutputGraphics,
+             paste("RCP", paste(rcp,collapse="_"),"Scatter.png",sep="_")),height=1000,width=1000)
               on.exit(dev.off()) 
         }
       # aggregate to years        

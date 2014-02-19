@@ -1,4 +1,4 @@
-YearlyLinePlot<-function(InputDat,MovAvgPeriod=10,MovAvg=FALSE,LM=TRUE,LMPeriod,Ylab,Xlab,Plot=TRUE,maCol,Months,Main="",DisplayOutput,OutputGraphics){
+YearlyLinePlot<-function(InputDat,MovAvgPeriod=10,MovAvg=FALSE,LM=TRUE,LMPeriod,Ylab,Xlab,Plot=TRUE,maCol,Months,Main="",cexMult,DisplayOutput,OutputGraphics){
     # in order to produce some line plots we need to do a couple things
     # remove incomplete years
     # clip each month to the correct shape
@@ -15,9 +15,13 @@ YearlyLinePlot<-function(InputDat,MovAvgPeriod=10,MovAvg=FALSE,LM=TRUE,LMPeriod,
     
     # @data contains the data of the clipped a
        #now average over the months for each year and over the pixels
-    if(!DisplayOutput) jpeg(file.path(OutputGraphics,
-       paste(InputDat@Var,min(InputDat@Year),"to",max(InputDat@Year),"Line.jpeg",sep="_")),height=1000,width=1000) 
-       
+    if(missing(Ylab)) Ylab=GenerateLab(InputDat)
+    if(missing(Main)) Main=paste(ParkName,"\n Historic ",LongName(InputDat@Var),sep=" ")
+  
+    if(!DisplayOutput){ png(file.path(OutputGraphics,
+       paste(InputDat@Var,min(InputDat@Year),"to",max(InputDat@Year),"Line.png",sep="_")),height=1000,width=1000) 
+       on.exit(dev.off())
+       }
     if(missing(Months)) Months=seq(1:12)
     
      Keep <- InputDat@Month%in%Months
@@ -27,15 +31,19 @@ YearlyLinePlot<-function(InputDat,MovAvgPeriod=10,MovAvg=FALSE,LM=TRUE,LMPeriod,
     YearDat<-data.frame(Year=unique(InputDat@Year[Keep]),PkAvg=YearlyPkAvg,rollAvg=rollAvg)
     
     PlotOut <- ggplot(aes(Year, PkAvg), data=YearDat) + geom_line() + geom_point() +
-    		theme(axis.text.y = element_text(size = 7)) +
-    		theme(axis.title.y = element_text(size = 10, angle = 90)) +
+    		theme(axis.text.y = element_text(size = rel(cexMult))) +
+    		theme(axis.text.x = element_text(size = rel(cexMult))) +
+    		theme(axis.title.y = element_text(size = rel(cexMult), angle = 90)) +
+    		theme(axis.title.x = element_text(size = rel(cexMult)))+
+    		theme(plot.title =element_text(size=rel(1.5*cexMult)))+
+    		theme(plot.margin =unit(c(10,10,10,10),"mm"))+
     		ylab(Ylab) + xlab(Xlab) + ggtitle(Main)+
     		scale_x_continuous(breaks = c(1900, 1920, 1940, 1960, 1980, 2000)) 
     		
     		if(LM) PlotOut <- PlotOut + geom_smooth(method="lm")
         if(MovAvg) PlotOut <- PlotOut + geom_line(aes(y=rollAvg),colour=maCol,size=2)
-        if(Plot) plot(PlotOut)
-      if(!DisplayOutput) dev.off()  
+        if(Plot)plot(PlotOut)
+    
 		return(PlotOut)
 }
 

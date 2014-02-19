@@ -40,7 +40,7 @@ UnitLookup<-list(Nex=list(TimeOrigin = "1950-01-01T00:00:00Z",
                             Tmax ="C",
                             tas ="C",
                             tasmin ="C",
-                            tastmax="C",
+                            tasmax="C",
                             Precip ="mm",
                             pr ="mm",
                             latName = "latitude",
@@ -58,39 +58,16 @@ UnitLookup<-list(Nex=list(TimeOrigin = "1950-01-01T00:00:00Z",
                             )                                         
                  )                    
                           
-GenerateLab<-function(Var,PlotUnits,addTime=FALSE,Month,Year){
-    
- quant<-switch(Var,
-              Temp    = "Temperature",
-               Tas     = "Average~Temperature",
-              Tmin    = "Minimum~Temperature",
-              Tmax    = "Maximum~Temperature",
-              tmx     ="Maximum~Temperature",
-              Precip  = "Precipitation",
-              GrnPnk     = "",
-              PurOrn  ="",
-              PrecipChng = "Precipitation~Change",
-              TempChng   = "Temperature~Change")
-           
-           #setting a default label and changing it in a few special cases 
-            Main = paste(quant, PlotUnits,sep="~")
-           if(toupper(PlotUnits)%in%c("C","F","K")){
-               Main<-paste(quant, "~({}^o*",PlotUnits,")",sep="")
-            } 
-            if(toupper(PlotUnits)=="MM"){
-               Main<-paste(quant, "(mm / month)",sep="")
-            } 
-            if(PlotUnits=="kgm2s1"){
-            Main = paste(quant,(kg*m^2*s^1),sep="~")
-            } 
-            if(addTime){ Main = paste(
-                     ifelse(length(x@Month==1),paste(month.name[Month],"~",sep=""),""),
-                     ifelse(length(x@Year==1),Year,paste(min(Year),"~to~",max(Year),sep="")),
-                     "~",Main,
-                     sep="")
-                 }
-                
-           Main = parse(text=Main)
-           return(Main) 
+StandardUnits<-function(Units){
+#because the NCDFs can think of so many ways to define the quantities and I only want to deal with a few...
+if(Units%in%c("Temp","tas","Tas"))
+   return("Temp")
+if(Units%in%c("tmx","Tmax","tasmax"))
+   return("Tmax")
+if(Units%in%c("ppt","Precip","pr","precip"))
+   return("Precip")
+if(Units%in%c("tmn","Tmin","tasmin"))
+   return("Tmin")
+return(Units)         
 }
  

@@ -55,6 +55,7 @@ ReadClimateNetCDF<-function(OutputDir,Time,Model,Var,Boundary,WholeYear=TRUE,Col
         else
            ClippedDat<-cbind(ClippedDat,a@data)
     }  
+    browser()
     colnames(ClippedDat)<-Time
     if(CollapsePixels) ClippedDat<-apply(ClippedDat,2,mean)
    return(ClippedDat) 

@@ -1,37 +1,15 @@
 	
 setMethod("plot", signature(x='MappedData',y='ANY'),  
-    function(x,Bound,Colors,background,Main,midCol="white",DisplayOutput,OutputGraphics,...){ 
+    function(x,Bound,Colors,background,Main,midCol="white",DisplayOutput,OutputGraphics,cexMult,...){ 
     # This function takes a boundary and a two dimensional raster 
     # long and lat should be its x and y dimenssions
    
-      if(!DisplayOutput){ jpeg(file.path(OutputGraphics,
-       paste(x@Projection,x@Year,"Map.jpeg",sep="_")),height=1000,width=1000)
+      if(!DisplayOutput){ png(file.path(OutputGraphics,
+       paste(x@Projection,x@Year,"Map.png",sep="_")),height=1000,width=1000)
         on.exit(dev.off())
         }
-     if(missing(Main)){ # we have units and the value being plotted
-     #so we can stitch together a main title
-     quant<-switch(x@Var,
-              Temp    = "Temperature",
-               Tas     = "Average~Temperature",
-              Tmin    = "Minimum~Temperature",
-              Tmax    = "Maximum~Temperature",
-              Precip  = "Precipitation",
-              GrnPnk     = "",
-              PurOrn  ="",
-              PrecipChng = "Precipitation~Change",
-              TempChng   = "Temperature~Change")
-             
-           if(toupper(x@PlotUnits)%in%c("C","F","K")){
-               Main<-paste(quant, "~({}^o*",x@PlotUnits,")",sep="")
-            }
-            else Main = paste(quant, x@PlotUnits,sep="~")
-            Main = paste(
-                   ifelse(length(x@Month==1),paste(month.name[x@Month],"~",sep=""),""),
-                   ifelse(length(x@Year==1),x@Year,paste(min(x@Year),"~to~",max(x@Year),sep="")),
-                   "~",Main,
-                 sep="")
-            Main = parse(text=Main)
-     }
+     if(missing(Main)) Main<-GenerateLabel(x,addTime=TRUE)
+   
     # storing some standard colors for maps and borders which can be overriddent
     if(missing(Colors)) Colors<-GenerateColors(x@Var)
     if(midCol!="white") Colors=two.colors(n=256, start=Colors[1], end=Colors[length(Colors)], middle=midCol,alpha=1.0)
