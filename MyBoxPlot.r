@@ -21,7 +21,7 @@ if(GroupBy=="season"){
        }
 if(GroupBy=="month"){
        Groups = split(seq(1:12),factor(month.abb,ordered=TRUE,levels=month.abb))
-       if(is.na(Col)) Col= rep("red",times=12)
+       if(is.na(Col)) Col= brewer.pal(12,"Set3")
        Dim<-c(4,3)
        }  
  if(GroupBy=="year"){
@@ -31,10 +31,10 @@ if(GroupBy=="month"){
        }   
 
 if(AllOnePlot) par(mfrow=c(Dim[1],Dim[2]))
- 
+    
  for(i in 1:length(Groups)){
     
-     Keep <- InputDat@Month%in%Months
+     Keep <- InputDat@Month%in%Groups[i][[1]]
      
      InputDat2 <- InputDat@Ts[Keep]
      YrKeep<-Yr10[Keep]

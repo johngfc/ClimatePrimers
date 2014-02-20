@@ -39,7 +39,7 @@ AnomalyPlot <- function(InputDat,Baseline,Ylab,Months,Main,ParkName,DisplayOutpu
     		theme(axis.title.y = element_text(size = rel(cexMult), angle = 90)) +
     		theme(axis.title.x = element_text(size = rel(cexMult)))+
     		theme(plot.title =element_text(size=rel(1.2*cexMult)))+
-    		theme(plot.margin =unit(c(8,8,8,8),"mm"))
+    		theme(plot.margin =unit(c(15,8,8,8),"mm"))
      plot(p)
       
 }        

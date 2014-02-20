@@ -20,10 +20,12 @@ Scatter<-function(Tavg,Pr,Baseline=c(1950,1980),PlotTime=c(2050,2060),rcp,Displa
        # in the baseline period
       PrDat<-apply(Pr@Ts[PlotPeriod,Pr@Rcp%in%rcp],2,mean)/mean(Pr@Ts[BasePeriod,Pr@Rcp%in%rcp])
       TDat<-apply(Tavg@Ts[PlotPeriod,Tavg@Rcp%in%rcp],2,mean)/mean(Tavg@Ts[BasePeriod,Tavg@Rcp%in%rcp])
-      
-      MyPlot(TDat,PrDat,bgCol="grey85",ylab="Average annual Precip.",xlab="Average Annual Celcius Temp",main=Main)
-      text(TDat,PrDat,labels=Pr@Proj[Pr@Rcp%in%rcp],col=c("green","goldenrod3","orangered","red4")[Pr@Rcp[Pr@Rcp%in%rcp]],cex=1.2)
+      par(mar=c(5,6,4,2))
+      MyPlot(TDat,PrDat,bgCol="grey85",ylab="Average annual Precip.",
+      xlab="Average Annual Celcius Temp",main=Main,cex.main=cexMult,cex.lab=cexMult)
+      text(TDat,PrDat,labels=Pr@Proj[Pr@Rcp%in%rcp],
+      col=c("green","goldenrod3","orangered","red4")[Pr@Rcp[Pr@Rcp%in%rcp]],cex=1.2)
       if(length(rcp>1)) legend("bottomright",legend=levels(Pr@Rcp)[levels(Pr@Rcp)%in%rcp],
-                          fill=c("green","goldenrod3","orangered","red4")[levels(Pr@Rcp)%in%rcp])
+                          fill=c("green","goldenrod3","orangered","red4")[levels(Pr@Rcp)%in%rcp],cex=cexMult)
 
 }

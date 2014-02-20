@@ -1,14 +1,15 @@
 	
 setMethod("plot", signature(x='MappedData',y='ANY'),  
-    function(x,Bound,Colors,background,Main,midCol="white",DisplayOutput,OutputGraphics,cexMult,...){ 
+    function(x,Bound,Colors,background,Main,midCol="white",DisplayOutput,OutputGraphics,cexMult,plotBound,plotState,...){ 
     # This function takes a boundary and a two dimensional raster 
     # long and lat should be its x and y dimenssions
    
       if(!DisplayOutput){ png(file.path(OutputGraphics,
-       paste(x@Projection,x@Year,"Map.png",sep="_")),height=1000,width=1000)
+       paste(paste(month.abb[as.numeric(format(x@Time,format="%m"))],collapse="_"),x@Year,
+          x@Projection,"Map.png",sep="_")),height=1000,width=1000)
         on.exit(dev.off())
         }
-     if(missing(Main)) Main<-GenerateLabel(x,addTime=TRUE)
+     if(missing(Main)) Main<-GenerateLab(x,addTime=TRUE)
    
     # storing some standard colors for maps and borders which can be overriddent
     if(missing(Colors)) Colors<-GenerateColors(x@Var)
@@ -21,7 +22,7 @@ setMethod("plot", signature(x='MappedData',y='ANY'),
     #      TempAvg[Long,Lat,time,Proj]
     #================================================================
     
-    if(!missing(background) & !missing(Bound)){
+    if(!missing(background)){
    
        #  x@Layer<- ClipToPolygon(x@Lon,x@Lat,t(x@Layer),Bound,Indicies=TRUE)
          #when clipping we have to remove extra rows and columns so plots look good
@@ -50,7 +51,8 @@ setMethod("plot", signature(x='MappedData',y='ANY'),
                            BgCol<-apply(color.box/255,2,temp.fct)
          
           par(oma=c( 0,0,0,4))
-          image(x=x@Lon,y=x@Lat,x@Layer,col=Colors,xlab="Longitude",ylab="Latitude",main=Main)
+          image(x=x@Lon,y=x@Lat,x@Layer,col=Colors,xlab="Longitude",ylab="Latitude",
+            main=Main,cex.lab=cexMult,cex.main=cexMult)
           image(x=seq(from=Bound@bbox[1,1],to=Bound@bbox[1,2],length=nrow(background)),
                      y=seq(from=Bound@bbox[2,1],to=Bound@bbox[2,2],length=ncol(background)),
                      z=background,col=BgCol,add=TRUE)
@@ -61,10 +63,11 @@ setMethod("plot", signature(x='MappedData',y='ANY'),
          
     }else{
           par(oma=c( 0,0,0,4))
-          image(x=x@Lon,y=x@Lat,z=x@Layer,col=Colors,xlab="Longitude",ylab="Latitude",main=Main)
-          plot(Bound,add=TRUE,lwd=2,border="black")
+          image(x=x@Lon,y=x@Lat,z=x@Layer,col=Colors,xlab="Longitude",ylab="Latitude",main=Main,
+          cex.lab=cexMult,cex.main=cexMult)
+          if(plotBound) plot(Bound,add=TRUE,lwd=2,border="black")
       # legend("bottomright",legend=c("Park Boundary","State Boundary"),col=c("black","red"),lty=1,lwd=c(4,2),bg="white")
-          map("state",col="black",add=TRUE,lwd=2)
+          if(plotState) map("state",col="black",add=TRUE,lwd=2)
     }
         par(oma=c( 0,0,0,1))
           image.plot(x@Layer,legend.only=TRUE,col=Colors)
